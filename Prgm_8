@@ -1,0 +1,130 @@
+
+#include <stdio.h>
+
+int main(void)
+{
+    int i, NOP, quant;
+    int sum = 0, count = 0, y;
+    int wt = 0, tat = 0;
+    int at[10], bt[10], temp[10];
+    float avg_wt, avg_tat;
+
+    printf("Total number of processes (max 10): ");
+    scanf("%d", &NOP);
+
+    if (NOP < 1 || NOP > 10)
+    {
+        printf("Invalid number of processes.\n");
+        return 1;
+    }
+
+    y = NOP;
+
+    for (i = 0; i < NOP; i++)
+    {
+        printf("\nEnter arrival time for Process[%d]: ", i + 1);
+        scanf("%d", &at[i]);
+
+        printf("Enter burst time for Process[%d]: ", i + 1);
+        scanf("%d", &bt[i]);
+
+        if (at[i] < 0 || bt[i] <= 0)
+        {
+            printf("Invalid arrival or burst time.\n");
+            return 1;
+        }
+
+        temp[i] = bt[i];
+    }
+
+    printf("\nEnter the time quantum: ");
+    scanf("%d", &quant);
+
+    if (quant <= 0)
+    {
+        printf("Time quantum must be positive.\n");
+        return 1;
+    }
+
+    printf("\nProcess\tBurst Time\tTAT\tWaiting Time\n");
+
+    i = 0;
+
+    while (y != 0)
+    {
+        if (temp[i] > 0 && at[i] <= sum)
+        {
+            if (temp[i] <= quant)
+            {
+                sum += temp[i];
+                temp[i] = 0;
+                count = 1;
+            }
+            else
+            {
+                temp[i] -= quant;
+                sum += quant;
+            }
+
+            if (temp[i] == 0 && count == 1)
+            {
+                int process_tat = sum - at[i];
+                int process_wt = process_tat - bt[i];
+
+                y--;
+
+                printf("P[%d]\t%d\t\t%d\t%d\n",
+                       i + 1, bt[i], process_tat, process_wt);
+
+                wt += process_wt;
+                tat += process_tat;
+                count = 0;
+            }
+        }
+
+        i = (i + 1) % NOP;
+
+        /*
+         * If no process is ready, advance time to
+         * the next arrival time.
+         */
+        if (y > 0)
+        {
+            int ready = 0;
+
+            for (int j = 0; j < NOP; j++)
+            {
+                if (temp[j] > 0 && at[j] <= sum)
+                {
+                    ready = 1;
+                    break;
+                }
+            }
+
+            if (!ready)
+            {
+                int next = -1;
+
+                for (int j = 0; j < NOP; j++)
+                {
+                    if (temp[j] > 0 &&
+                        (next == -1 || at[j] < next))
+                    {
+                        next = at[j];
+                    }
+                }
+
+                if (next != -1 && next > sum)
+                    sum = next;
+            }
+        }
+    }
+
+    avg_wt = (float)wt / NOP;
+    avg_tat = (float)tat / NOP;
+
+    printf("\nAverage Waiting Time: %.2f\n", avg_wt);
+    printf("Average Turnaround Time: %.2f\n", avg_tat);
+
+    return 0;
+}
