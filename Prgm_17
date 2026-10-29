@@ -1,0 +1,200 @@
+
+#include <stdio.h>
+
+#define P 5
+#define R 3
+
+int available[R] = {3, 3, 2};
+
+int maximum[P][R] = {
+    {7, 5, 3},
+    {3, 2, 2},
+    {9, 0, 2},
+    {2, 2, 2},
+    {4, 3, 3}
+};
+
+int allocation[P][R] = {
+    {0, 1, 0},
+    {2, 0, 0},
+    {3, 0, 2},
+    {2, 1, 1},
+    {0, 0, 2}
+};
+
+int need[P][R];
+
+int isSafe(void)
+{
+    int work[R], finish[P] = {0};
+    int safeSequence[P];
+    int count = 0;
+
+    for (int j = 0; j < R; j++)
+        work[j] = available[j];
+
+    while (count < P) {
+        int found = 0;
+
+        for (int i = 0; i < P; i++) {
+            if (finish[i])
+                continue;
+
+            int possible = 1;
+
+            for (int j = 0; j < R; j++) {
+                if (need[i][j] > work[j]) {
+                    possible = 0;
+                    break;
+                }
+            }
+
+            if (possible) {
+                for (int j = 0; j < R; j++)
+                    work[j] += allocation[i][j];
+
+                safeSequence[count++] = i;
+                finish[i] = 1;
+                found = 1;
+            }
+        }
+
+        if (!found)
+            return 0;
+    }
+
+    printf("System is in a SAFE state.\n");
+    printf("Safe sequence: ");
+
+    for (int i = 0; i < P; i++)
+        printf("P%d%s", safeSequence[i],
+               (i == P - 1) ? "\n" : " -> ");
+
+    return 1;
+}
+
+void displayData(void)
+{
+    printf("\nProcess\tAllocation\tMaximum\t\tNeed\n");
+
+    for (int i = 0; i < P; i++) {
+        printf("P%d\t", i);
+
+        for (int j = 0; j < R; j++)
+            printf("%d ", allocation[i][j]);
+
+        printf("\t\t");
+
+        for (int j = 0; j < R; j++)
+            printf("%d ", maximum[i][j]);
+
+        printf("\t\t");
+
+        for (int j = 0; j < R; j++)
+            printf("%d ", need[i][j]);
+
+        printf("\n");
+    }
+
+    printf("Available: ");
+    for (int j = 0; j < R; j++)
+        printf("%d ", available[j]);
+
+    printf("\n");
+}
+
+void requestResources(void)
+{
+    int process, request[R];
+
+    printf("Enter process number (0-4): ");
+    if (scanf("%d", &process) != 1)
+        return;
+
+    if (process < 0 || process >= P) {
+        printf("Invalid process number.\n");
+        return;
+    }
+
+    printf("Enter request for A, B and C: ");
+    if (scanf("%d %d %d",
+              &request[0], &request[1], &request[2]) != 3) {
+        printf("Invalid input.\n");
+        return;
+    }
+
+    for (int j = 0; j < R; j++) {
+        if (request[j] < 0 ||
+            request[j] > need[process][j]) {
+            printf("Request exceeds process need or is invalid.\n");
+            return;
+        }
+
+        if (request[j] > available[j]) {
+            printf("Resources are not currently available.\n");
+            return;
+        }
+    }
+
+    /* Temporarily allocate the requested resources. */
+    for (int j = 0; j < R; j++) {
+        available[j] -= request[j];
+        allocation[process][j] += request[j];
+        need[process][j] -= request[j];
+    }
+
+    if (isSafe()) {
+        printf("Request GRANTED safely.\n");
+    } else {
+        /* Roll back if the new state is unsafe. */
+        for (int j = 0; j < R; j++) {
+            available[j] += request[j];
+            allocation[process][j] -= request[j];
+            need[process][j] += request[j];
+        }
+
+        printf("Request DENIED. System would be unsafe.\n");
+    }
+}
+
+int main(void)
+{
+    int choice;
+
+    for (int i = 0; i < P; i++) {
+        for (int j = 0; j < R; j++)
+            need[i][j] = maximum[i][j] - allocation[i][j];
+    }
+
+    do {
+        printf("\n--- Banker's Algorithm ---\n");
+        printf("1. Display resource tables\n");
+        printf("2. Check safe state\n");
+        printf("3. Request resources\n");
+        printf("4. Exit\n");
+        printf("Enter choice: ");
+
+        if (scanf("%d", &choice) != 1)
+            break;
+
+        switch (choice) {
+            case 1:
+                displayData();
+                break;
+            case 2:
+                if (!isSafe())
+                    printf("System is in an UNSAFE state.\n");
+                break;
+            case 3:
+                requestResources();
+                break;
+            case 4:
+                printf("Exiting program.\n");
+                break;
+            default:
+                printf("Invalid choice.\n");
+        }
+    } while (choice != 4);
+
+    return 0;
+}
