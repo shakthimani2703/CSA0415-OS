@@ -1,0 +1,120 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+
+#define BUFFER_SIZE 4096
+
+#define SOURCE_FILE "sasi.txt"
+#define DEST_FILE   "sk.txt"
+
+void copy(void)
+{
+    int source_fd, dest_fd;
+    char buffer[BUFFER_SIZE];
+    ssize_t bytes_read, bytes_written;
+    ssize_t total_written;
+
+    source_fd = open(SOURCE_FILE, O_RDONLY);
+
+    if (source_fd == -1) {
+        perror("Error opening source file");
+        return;
+    }
+
+    dest_fd = open(DEST_FILE, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+
+    if (dest_fd == -1) {
+        perror("Error opening destination file");
+        close(source_fd);
+        return;
+    }
+
+    while ((bytes_read = read(source_fd, buffer, BUFFER_SIZE)) > 0) {
+        total_written = 0;
+
+        while (total_written < bytes_read) {
+            bytes_written = write(
+                dest_fd,
+                buffer + total_written,
+                bytes_read - total_written
+            );
+
+            if (bytes_written <= 0) {
+                perror("Error writing file");
+                close(source_fd);
+                close(dest_fd);
+                return;
+            }
+
+            total_written += bytes_written;
+        }
+    }
+
+    if (bytes_read == -1) {
+        perror("Error reading source file");
+    } else {
+        printf("File copied successfully.\n");
+    }
+
+    close(source_fd);
+    close(dest_fd);
+}
+
+void create(void)
+{
+    FILE *fp = fopen(SOURCE_FILE, "w");
+
+    if (fp == NULL) {
+        perror("Error creating file");
+        return;
+    }
+
+    fclose(fp);
+    printf("File created successfully.\n");
+}
+
+void delete_file(void)
+{
+    if (remove(SOURCE_FILE) == 0) {
+        printf("File deleted successfully.\n");
+    } else {
+        perror("Error deleting file");
+    }
+}
+
+int main(void)
+{
+    int n;
+
+    printf("1. Create\n");
+    printf("2. Copy\n");
+    printf("3. Delete\n");
+    printf("Enter your choice: ");
+
+    if (scanf("%d", &n) != 1) {
+        printf("Invalid input.\n");
+        return 1;
+    }
+
+    switch (n) {
+        case 1:
+            create();
+            break;
+
+        case 2:
+            copy();
+            break;
+
+        case 3:
+            delete_file();
+            break;
+
+        default:
+            printf("Invalid choice.\n");
+    }
+
+    return 0;
+}
