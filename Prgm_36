@@ -1,0 +1,67 @@
+/* Q36. Linked file allocation:
+   each file is a linked list of disk blocks scattered on the disk;
+   the directory stores pointers to the first and last blocks;
+   each block stores a pointer to the next block. */
+#include <stdio.h>
+
+#define DISK_SIZE 50
+
+struct Block {
+    int used;       /* 0 = free, 1 = allocated */
+    int next;       /* next block number, -1 = end of file */
+};
+
+struct DirEntry {
+    char name[20];
+    int start, end, length;
+};
+
+struct Block disk[DISK_SIZE];
+
+int main(void) {
+    struct DirEntry file;
+    int i, b, prev = -1, ok = 1, req[DISK_SIZE];
+
+    for (i = 0; i < DISK_SIZE; i++) { disk[i].used = 0; disk[i].next = -1; }
+
+    printf("Enter file name: ");
+    scanf("%19s", file.name);
+    printf("Enter number of blocks for the file: ");
+    scanf("%d", &file.length);
+    printf("Enter the block numbers (0-%d), in order: ", DISK_SIZE - 1);
+    for (i = 0; i < file.length; i++) {
+        scanf("%d", &req[i]);
+        if (req[i] < 0 || req[i] >= DISK_SIZE) ok = 0;
+    }
+    for (i = 0; i < file.length && ok; i++)
+        for (b = i + 1; b < file.length; b++)
+            if (req[i] == req[b]) ok = 0;
+
+    if (!ok || file.length <= 0) {
+        printf("Invalid or duplicate block numbers. File not allocated.\n");
+        return 1;
+    }
+
+    /* link the blocks */
+    for (i = 0; i < file.length; i++) {
+        b = req[i];
+        disk[b].used = 1;
+        disk[b].next = -1;
+        if (prev != -1) disk[prev].next = b;
+        prev = b;
+    }
+    file.start = req[0];
+    file.end = req[file.length - 1];
+
+    printf("\nDirectory entry:\n");
+    printf("File Name\tStart Block\tEnd Block\tLength\n");
+    printf("%s\t\t%d\t\t%d\t\t%d\n", file.name, file.start, file.end, file.length);
+
+    printf("\nTraversing the linked list of blocks:\n");
+    for (b = file.start; b != -1; b = disk[b].next) {
+        printf("%d", b);
+        if (disk[b].next != -1) printf(" -> ");
+    }
+    printf(" -> NULL\n");
+    return 0;
+}
