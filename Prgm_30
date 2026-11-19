@@ -1,0 +1,58 @@
+/* Q30. Thread concepts: create, join, equal, self, exit
+   Compile:  gcc q30_threads.c -o q30 -pthread  */
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+
+pthread_t mainThread;
+
+void *worker(void *arg) {
+    int id = *(int *)arg;
+    pthread_t self = pthread_self();
+
+    printf("Thread %d: started\n", id);
+
+    /* pthread_equal : compare this thread with the main thread */
+    if (pthread_equal(self, mainThread))
+        printf("Thread %d: I am equal to the main thread\n", id);
+    else
+        printf("Thread %d: I am NOT equal to the main thread\n", id);
+
+    printf("Thread %d: finished, calling pthread_exit()\n", id);
+
+    /* pthread_exit : return a value to the joining thread */
+    int *result = malloc(sizeof(int));
+    *result = id * 10;
+    pthread_exit(result);
+}
+
+int main(void) {
+    pthread_t t1, t2;
+    int id1 = 1, id2 = 2;
+    void *ret;
+
+    mainThread = pthread_self();
+
+    /* pthread_create */
+    printf("Main: creating threads\n");
+    pthread_create(&t1, NULL, worker, &id1);
+    pthread_create(&t2, NULL, worker, &id2);
+
+    /* pthread_equal between two created threads */
+    if (pthread_equal(t1, t2))
+        printf("Main: t1 and t2 are equal\n");
+    else
+        printf("Main: t1 and t2 are NOT equal\n");
+
+    /* pthread_join : wait for threads and collect results */
+    pthread_join(t1, &ret);
+    printf("Main: thread 1 joined, returned %d\n", *(int *)ret);
+    free(ret);
+
+    pthread_join(t2, &ret);
+    printf("Main: thread 2 joined, returned %d\n", *(int *)ret);
+    free(ret);
+
+    printf("Main: all threads finished\n");
+    return 0;
+}
