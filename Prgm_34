@@ -1,0 +1,52 @@
+/* Q34. Sequential (contiguous) file allocation:
+   records stored one after another; record k can be reached only by
+   reading records 1..k-1 first. */
+#include <stdio.h>
+#include <string.h>
+
+struct Record {
+    int id;
+    char name[30];
+};
+
+int main(void) {
+    struct Record r;
+    FILE *fp;
+    int n, i, target, found = 0;
+
+    fp = fopen("sequential.dat", "wb");
+    if (fp == NULL) { printf("Cannot create file\n"); return 1; }
+
+    printf("Enter number of records: ");
+    scanf("%d", &n);
+    for (i = 0; i < n; i++) {
+        r.id = i + 1;
+        printf("Enter name for record %d: ", r.id);
+        scanf("%29s", r.name);
+        fwrite(&r, sizeof(r), 1, fp);          /* written one after another */
+    }
+    fclose(fp);
+
+    printf("\nEnter record number to access: ");
+    scanf("%d", &target);
+
+    fp = fopen("sequential.dat", "rb");
+    if (fp == NULL) { printf("Cannot open file\n"); return 1; }
+
+    printf("\nReading sequentially from the beginning:\n");
+    while (fread(&r, sizeof(r), 1, fp) == 1) {
+        if (r.id == target) {
+            printf("--> Record %d found: %s\n", r.id, r.name);
+            found = 1;
+            break;
+        }
+        printf("    Passing record %d: %s\n", r.id, r.name);
+    }
+    fclose(fp);
+
+    if (!found) printf("Record %d does not exist.\n", target);
+    else printf("Records read to reach it: %d\n", target);
+
+    remove("sequential.dat");
+    return 0;
+}
