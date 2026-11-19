@@ -1,0 +1,55 @@
+/* Q29. Classical process synchronization problem: Producer-Consumer (bounded buffer)
+   simulated with semaphore variables mutex, full, empty */
+#include <stdio.h>
+#include <stdlib.h>
+
+#define BUFFER_SIZE 5
+
+int mutex = 1, full = 0, empty = BUFFER_SIZE, x = 0;
+
+int wait_s(int s)   { return --s; }
+int signal_s(int s) { return ++s; }
+
+void producer(void) {
+    mutex = wait_s(mutex);
+    full  = signal_s(full);
+    empty = wait_s(empty);
+    x++;
+    printf("Producer produces item %d\n", x);
+    mutex = signal_s(mutex);
+}
+
+void consumer(void) {
+    mutex = wait_s(mutex);
+    full  = wait_s(full);
+    empty = signal_s(empty);
+    printf("Consumer consumes item %d\n", x);
+    x--;
+    mutex = signal_s(mutex);
+}
+
+int main(void) {
+    int choice;
+    printf("Buffer size = %d\n", BUFFER_SIZE);
+    printf("1. Producer\n2. Consumer\n3. Exit\n");
+    while (1) {
+        printf("\nEnter your choice: ");
+        if (scanf("%d", &choice) != 1) break;
+        switch (choice) {
+        case 1:
+            if (mutex == 1 && empty != 0) producer();
+            else printf("Buffer is FULL!\n");
+            break;
+        case 2:
+            if (mutex == 1 && full != 0) consumer();
+            else printf("Buffer is EMPTY!\n");
+            break;
+        case 3:
+            printf("Exiting...\n");
+            exit(0);
+        default:
+            printf("Invalid choice!\n");
+        }
+    }
+    return 0;
+}
