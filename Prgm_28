@@ -1,0 +1,48 @@
+/* Q28. Simulate the UNIX 'grep' command */
+#include <stdio.h>
+#include <string.h>
+
+int main(void) {
+    char filename[100], pattern[100], line[1024];
+    int lineNo = 0, matches = 0;
+    FILE *fp;
+
+    /* Create a sample file so the program can be tested straight away */
+    fp = fopen("grep_sample.txt", "w");
+    if (fp != NULL) {
+        fprintf(fp, "operating systems lab\n");
+        fprintf(fp, "process scheduling in an operating system\n");
+        fprintf(fp, "memory management\n");
+        fprintf(fp, "file system and disk scheduling\n");
+        fclose(fp);
+    }
+    printf("(A sample file 'grep_sample.txt' has been created for testing.)\n");
+
+    printf("Enter file name: ");
+    scanf("%99s", filename);
+    printf("Enter pattern to search: ");
+    scanf("%99s", pattern);
+
+    fp = fopen(filename, "r");
+    if (fp == NULL) {
+        perror("Error opening file");
+        return 1;
+    }
+
+    printf("\nLines containing \"%s\":\n", pattern);
+    while (fgets(line, sizeof(line), fp) != NULL) {
+        lineNo++;
+        if (strstr(line, pattern) != NULL) {
+            printf("%d: %s", lineNo, line);
+            if (line[strlen(line) - 1] != '\n') printf("\n");
+            matches++;
+        }
+    }
+    fclose(fp);
+
+    if (matches == 0)
+        printf("No match found.\n");
+    else
+        printf("\nTotal matching lines: %d\n", matches);
+    return 0;
+}
