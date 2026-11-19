@@ -1,0 +1,52 @@
+/* Q26. File management operations: create, write, read, append, rename, delete */
+#include <stdio.h>
+#include <stdlib.h>
+
+void showFile(const char *name) {
+    char line[200];
+    FILE *fp = fopen(name, "r");
+    if (fp == NULL) { printf("Cannot open %s\n", name); return; }
+    printf("---- Contents of %s ----\n", name);
+    while (fgets(line, sizeof(line), fp) != NULL)
+        printf("%s", line);
+    printf("-------------------------\n");
+    fclose(fp);
+}
+
+int main(void) {
+    FILE *fp;
+
+    /* Create & write */
+    fp = fopen("example.txt", "w");
+    if (fp == NULL) { printf("Error creating file.\n"); return 1; }
+    fprintf(fp, "Hello, World!\n");
+    fprintf(fp, "This is a C file management example.\n");
+    fclose(fp);
+    printf("1. File 'example.txt' created and written.\n");
+
+    /* Read */
+    printf("2. Reading file:\n");
+    showFile("example.txt");
+
+    /* Append */
+    fp = fopen("example.txt", "a");
+    if (fp == NULL) { printf("Error opening file for append.\n"); return 1; }
+    fprintf(fp, "This line was appended.\n");
+    fclose(fp);
+    printf("3. Line appended. New contents:\n");
+    showFile("example.txt");
+
+    /* Rename */
+    if (rename("example.txt", "renamed.txt") == 0)
+        printf("4. File renamed to 'renamed.txt'.\n");
+    else
+        perror("rename");
+
+    /* Delete */
+    if (remove("renamed.txt") == 0)
+        printf("5. File 'renamed.txt' deleted.\n");
+    else
+        perror("remove");
+
+    return 0;
+}
